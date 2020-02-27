@@ -1,0 +1,7 @@
+environment/
+rwar/
+*egg-info*
+venv/
+__pycache__/
+*.pem
+.vscode/
