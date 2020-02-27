@@ -9,7 +9,7 @@ class TestDigitalOceanSecrets(unittest.TestCase):
     def setUp(self):
         print("calling setup in TestDigitalOceanSecrets")
         self.temp_key = '445566'
-        docean_secrets_f = config.get('DigitalOcean API key file')
+        docean_secrets_f = config.get('DigitalOcean').get('API key file')
         home_dir = os.path.expanduser('~')
         self.docean_secrets_f = os.path.join(home_dir, docean_secrets_f)
         if os.path.isfile(self.docean_secrets_f):
@@ -24,13 +24,12 @@ class TestDigitalOceanSecrets(unittest.TestCase):
     
     def test_digocean_no_api_key(self):
         from cloud_if.dig_ocean import DigitalOcean
-        cfg = {'DigitalOcean API key file': '.digitalocean000000000000000'}
+        cfg = {'DigitalOcean':{'API key file': '.digitalocean000000000000000'}}
         vps = DigitalOcean(cfg)
         self.assertEqual(vps.key, None)
         cfg = {}
-        vps = DigitalOcean(cfg)
-        self.assertEqual(vps.key, None)
-        
+        with self.assertRaises(KeyError): 
+            vps = DigitalOcean(cfg)
 
     def test_digocean_get_secrets_format(self):
         vps = VpsCloud('DigitalOcean')
