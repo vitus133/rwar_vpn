@@ -21,9 +21,6 @@ class VpsCloud():
             from cloud_if.dig_ocean import DigitalOcean as vps
             self.vps = vps(config)
 
-    def hello(self):
-        return self.vps.hello()
-
     def save_secrets(self, secrets:dict)->bool:
         return self.vps.save_secrets(secrets)
 

@@ -1,18 +1,22 @@
-'''
-Implements information services required for our application
-using DigitalOcean REST API
-'''
 import os
-from cloud_if.vps_cloud import VpsCloud
 
-
-class DigitalOcean(VpsCloud):
-    def __init__(self, config):
+class DigitalOcean():
+    '''
+    Implements information services required for our application
+    using DigitalOcean REST API
+    '''
+    def __init__(self, config:dict):
+        '''
+        DigitalOcean class init.
+        '''
         self.config = config
         self.droplets = []
         self.key = self._read_api_key()
     
     def _read_api_key(self):
+        '''
+        Returns API key if exists, otherwise None
+        '''
         fn = self.config.get('DigitalOcean API key file')
         home = os.path.expanduser('~')
         try:
@@ -20,10 +24,6 @@ class DigitalOcean(VpsCloud):
                 return ''.join(f.readlines()).replace('\n', '')
         except Exception as e:
             return None
-
-    
-    def hello(self):
-        return "Hello from DigitalOcean"
     
     def check_secrets(self)->bool:
         return self.key != None
@@ -41,3 +41,4 @@ class DigitalOcean(VpsCloud):
                 return True
         except Exception as e:
             return False
+    

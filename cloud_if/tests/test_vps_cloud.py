@@ -30,7 +30,7 @@ class TestDigitalOceanSecrets(unittest.TestCase):
         cfg = {}
         vps = DigitalOcean(cfg)
         self.assertEqual(vps.key, None)
-        self.assertEqual(vps.hello(), f'Hello from DigitalOcean')
+        
 
     def test_digocean_get_secrets_format(self):
         vps = VpsCloud('DigitalOcean')
@@ -55,7 +55,6 @@ class TestVpsCloud(unittest.TestCase):
     def test_hello(self):         
         for vendor in self.supported_vendors:
             vps = VpsCloud(vendor)
-            self.assertEqual(vps.hello(), f'Hello from {vendor}')
   
     # Tests unsupported vendors throw exception
     def test_unsupported(self):         
