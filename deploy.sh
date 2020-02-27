@@ -10,9 +10,8 @@ openssl req -batch -x509 -newkey rsa:4096 -nodes -out src/cert.pem -keyout src/k
 python3 -m venv environment
 source environment/bin/activate
 pip install --upgrade pip
-cp service/rw-vpn.service /usr/lib/systemd/system/
-cd src
+cp service/rw_vpn.service /usr/lib/systemd/system/
 pip install -r requirements.txt
 systemctl daemon-reload
-systemctl start rw-vpn.service
-systemctl enable rw-vpn.service
+systemctl start rw_vpn.service
+systemctl enable rw_vpn.service
