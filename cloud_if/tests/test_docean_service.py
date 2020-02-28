@@ -13,6 +13,10 @@ if __name__ == '__main__':
     assert(user_info.status_code == 200)
     data = user_info.json()
     print(json.dumps(data, indent=2))
-    vps.deploy_droplet()
+    rsp = vps.deploy_droplet()
+    print(rsp.status_code)
+    # assert(rsp.status_code == 202)
+    create_rsp = rsp.json()
+    print(json.dumps(create_rsp, indent=2))
 
 

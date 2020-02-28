@@ -6,7 +6,6 @@ config = {
         
     },
     "Common": {
-        "vm_name": "rwar_vpn",
         "tags": ["standard"],
         "user_script_url": "https://raw.githubusercontent.com/vitus133/rwar_vpn/master/deploy.sh"
     }

@@ -11,7 +11,7 @@ python3 -m venv environment
 source environment/bin/activate
 pip install --upgrade pip
 cp service/rw_vpn.service /usr/lib/systemd/system/
-pip install -r requirements.txt
+pip install -r deploy_reqs.txt
 systemctl daemon-reload
 systemctl start rw_vpn.service
 systemctl enable rw_vpn.service

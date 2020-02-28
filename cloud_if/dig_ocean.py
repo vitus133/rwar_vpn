@@ -1,6 +1,7 @@
 import os
 import requests
 import secrets
+import json
 from urllib3.exceptions import InsecureRequestWarning
 
 
@@ -24,7 +25,7 @@ class DigitalOcean():
         self.home = os.path.expanduser('~')
         self.key = self._read_api_key()
         self.ssh_fp = self._read_ssh_fingerprint()
-        self.vm_name = self.common_config.get("vm_name", "rwar_vpn")
+        self.vm_name = self.common_config.get("vm_name", "rwar-vpn")
         self.region = self.config.get("region", "nyc1")
         self.size = self.config.get("size", "s-1vcpu-1gb")
         self.image = self.config.get("image", "centos-8-x64")
@@ -47,13 +48,14 @@ class DigitalOcean():
             "region": self.region,
             "size": self.size,
             "image": self.image,
-            "ssh_keys": self.ssh_fp,
+            "ssh_keys": [self.ssh_fp],
             "backups": self.backups,
             "ipv6": self.ipv6,
             "user_data": self.user_data,
             "private_networking": self.private_networking,
             "volumes": self.volumes,
             "tags": self.tags}
+        print(data)
         return self._api_post('droplets', data)
 
 
