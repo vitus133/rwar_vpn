@@ -5,7 +5,10 @@ gunicorn==20.0.4
 idna==2.9
 linecache2==1.0.0
 pkg-resources==0.0.0
+pycodestyle==2.5.0
 requests==2.23.0
+-e git+git@github.com:vitus133/rwar_vpn.git@3bd459bddce7b5616229b38a6d0b30da74c87c94#egg=rwar
+rwar-vpn==1.0
 six==1.14.0
 traceback2==1.4.0
 unittest2==1.1.0
