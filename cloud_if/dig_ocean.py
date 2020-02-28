@@ -11,23 +11,67 @@ class DigitalOcean():
         '''
         DigitalOcean class init.
         '''
+        # We only care about transport encryption, so we disable this warning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
         self.config = config.get('DigitalOcean')
+        self.common_config = config.get('Common')
         if not self.config:
             raise KeyError('DigitalOcean config is invalid')
         self.droplets = []
+        self.home = os.path.expanduser('~')
         self.key = self._read_api_key()
-    
-    def _read_api_key(self):
-        # Returns API key if exists, otherwise None
-        fn = self.config.get('API key file')
-        home = os.path.expanduser('~')
+        self.ssh_fp = self._read_ssh_fingerprint()
+        self.region = self.config.get("region", "nyc1")
+        self.size = self.config.get("size", "s-1vcpu-1gb")
+        self.image = self.config.get("image", "centos-8-x64")
+        self.backups = self.config.get("backups", False)
+        self.ipv6 = self.config.get("ipv6", False)
+        self.private_networking = self.config.get("private_networking", None)
+        self.volumes = self.config.get("volumes", None)
+
+    def _rd_single_str_file(self, file_path):
+        # Reads a file into a single string
         try:
-            with open(os.path.join(home, fn)) as f:
+            with open(file_path) as f:
                 return ''.join(f.readlines()).replace('\n', '')
         except Exception as e:
             return None
-    
+
+    def _wr_single_str_file(self, file_path, info:str)->bool:
+        # Writes / replace a single string into a file
+        # Returns bool Success (False on failure)
+        try:
+            with open(file_path, 'w') as f:
+                f.write(info)
+                return True
+        except Exception as e:
+            return False
+
+    def _read_ssh_fingerprint(self):
+        # Returns SSH fingerprint if exists, otherwise None
+        try:
+            fn = os.path.join(self.home, self.config.get('ssh'))
+            return self._rd_single_str_file(fn)
+        except Exception as e:
+            print(f"SSH fingerprint file is not configured, {e}")
+            return None
+
+    def _wr_ssh_fingerprint(self, info:str)->bool:
+        # Writes SSH fingerprint, returns bool status (False on failure)
+        try:
+            fn = os.path.join(self.home, self.config.get('ssh'))
+            return self._wr_single_str_file(fn, info)
+        except TypeError as e:
+            print(f"SSH fingerprint file is not configured, {e}")
+            return False
+        except Exception as e:
+            print(f"Failed to write {fn}, {e}")
+
+    def _read_api_key(self):
+        # Returns API key if exists, otherwise None
+        fn = os.path.join(self.home, self.config.get('API key file'))
+        return self._rd_single_str_file(fn)
+
     def _get_headers(self):
         # Preparing HTTP headers used in every request
         return {'Authorization': f'Bearer {self.key}',
@@ -44,14 +88,8 @@ class DigitalOcean():
     def save_secrets(self, secrets:dict)->bool:
         # Stores API key on file system
         key = secrets.get('API key')
-        fn = self.config.get('API key file')
-        home = os.path.expanduser('~')
-        try:
-            with open(os.path.join(home, fn), 'w') as f:
-                f.write(key)
-                return True
-        except Exception as e:
-            return False
+        fn = os.path.join(self.home, self.config.get('API key file'))
+        return self._wr_single_str_file(fn, key)
     
     def _api_get(self, endpoint:str):
         base_url = self.config.get('base_url')
