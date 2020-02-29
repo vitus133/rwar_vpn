@@ -6,8 +6,9 @@ yum install wget python3 git openvpn iptables openssl ca-certificates -y
 cd /usr/share
 git clone https://github.com/vitus133/rwar_vpn.git
 cd rwar_vpn
-tar xzf bin/EasyRSA-nix-3.0.5.tgz -C ~/
-mv ~/EasyRSA-3.0.5/ /etc/openvpn/server/
+sleep 1
+tar xzf bin/EasyRSA-nix-3.0.5.tgz
+mv EasyRSA-3.0.5 /etc/openvpn/server/
 mv /etc/openvpn/server/EasyRSA-3.0.5/ /etc/openvpn/server/easy-rsa/
 chown -R root:root /etc/openvpn/server/easy-rsa/
 cd /etc/openvpn/server/easy-rsa/
