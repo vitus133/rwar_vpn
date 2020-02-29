@@ -4,9 +4,10 @@ import secrets
 import json
 import time
 from urllib3.exceptions import InsecureRequestWarning
+from src.logger import Logger
 
 
-class DigitalOcean():
+class DigitalOcean(Logger):
     '''
     Implements information services required for our application
     using DigitalOcean REST API
@@ -44,7 +45,7 @@ class DigitalOcean():
             f"/usr/bin/curl {self.user_script_url} | /bin/bash")
 
     def deploy_droplet(self):
-        # Deploys droplet on DigitalOcean
+        self.logger.info("Deploy droplet, starting")
         data = {
             "name": self.vm_name,
             "region": self.region,
@@ -67,6 +68,7 @@ class DigitalOcean():
     
     def block_until_active(self, timeout=60, sleep=10) -> bool:
         if not self.droplet:
+            self.logger.error("There is no droplet to wait for")
             return False
         dr_status = ''
         time_spent = 0
@@ -78,15 +80,20 @@ class DigitalOcean():
                 j_rsp = rsp.json()
                 dr_status = j_rsp.get('droplet').get('status')
                 if dr_status == 'active':
-                    print(f"Droplet {droplet_id} is active")
+                    self.logger.debug(f"Droplet {droplet_id} is active")
                     return True
-                print(f"Waiting for droplet to become active...{time.time()}")
+                msg = (f"Waiting for droplet"
+                    f" to become active...{time.time()}")
+                self.logger.debug(msg)
                 time_spent += sleep
                 time.sleep(sleep)                
             else:
-                print(rsp.status_code, rsp.text)
+                msg = (f"Droplet get by ID failed:"
+                    f" {rsp.status_code}, {rsp.text}")
+                self.logger.error(msg)
                 return False
-        print(f"Droplet {droplet_id} activation check exited on timeout")      
+        self.logger.error(f"Droplet {droplet_id} activation check"
+            f" exited on timeout")      
         return false
                 
 
@@ -97,6 +104,7 @@ class DigitalOcean():
             with open(file_path) as f:
                 return ''.join(f.readlines()).replace('\n', '')
         except Exception as e:
+            self.logger.exception(e)
             return None
 
     def _wr_single_str_file(self, file_path, info: str) -> bool:
@@ -107,6 +115,7 @@ class DigitalOcean():
                 f.write(info)
                 return True
         except Exception as e:
+            self.logger.exception(e)
             return False
 
     def _read_ssh_fingerprint(self):
@@ -115,7 +124,7 @@ class DigitalOcean():
             fn = os.path.join(self.home, self.config.get('ssh'))
             return self._rd_single_str_file(fn)
         except Exception as e:
-            print(f"SSH fingerprint file is not configured, {e}")
+            self.logger.exception(f"SSH fingerprint is not configured, {e}")
             return None
 
     def _wr_ssh_fingerprint(self, info: str) -> bool:
@@ -124,10 +133,10 @@ class DigitalOcean():
             fn = os.path.join(self.home, self.config.get('ssh'))
             return self._wr_single_str_file(fn, info)
         except TypeError as e:
-            print(f"SSH fingerprint file is not configured, {e}")
+            self.logger.info(f"SSH fingerprint is not configured, {e}")
             return False
         except Exception as e:
-            print(f"Failed to write {fn}, {e}")
+            self.logger.exception(f"Failed to write {fn}, {e}")
 
     def _read_api_key(self):
         # Returns API key if exists, otherwise None
@@ -171,7 +180,7 @@ class DigitalOcean():
                                     headers=headers,
                                     data=json.dumps(data))
         except requests.exceptions.HTTPError as e:
-            print(e)
+            self.logger.exception(e)
         return response
 
     def _api_delete(self, endpoint: str):
@@ -181,7 +190,7 @@ class DigitalOcean():
             response = requests.delete(url=f'{base_url}/{endpoint}',
                                     headers=headers)
         except requests.exceptions.HTTPError as e:
-            print(e)
+            self.logger.exception(e)
         return response
 
     def get_info(self):
@@ -199,14 +208,15 @@ class DigitalOcean():
                 print(json.dumps(j_rsp, indent=2))
                 ret['droplets'] = {}
                 ret['droplets']['total'] = j_rsp.get('meta').get('total')
-                ret['droplets']['ids'] = [i.get('id') for i in j_rsp.get('droplets')]
+                ret['droplets']['ids'] = \
+                    [i.get('id') for i in j_rsp.get('droplets')]
             else:
                 ret['error'] = {}
                 ret['error']['code'] = rsp.status_code
                 ret['error']['text'] = rsp.text
             return ret
         else:
-            print(rsp.status_code, rsp.text)
+            self.logger.error(rsp.status_code, rsp.text)
             return None
 
     def clean_all(self):

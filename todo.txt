@@ -1,4 +1,4 @@
-1. Add logging 
-2. Complete digital ocean services transition from proof of concept to dig_ocean.py
+1. (done) Add logging 
+2. (done) Complete digital ocean services transition from proof of concept to dig_ocean.py 
 3. Cover #2 with tests
 4. Move all SSH fingerprint stuff to client related settings and functions (config.py, new client module)
