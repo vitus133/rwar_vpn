@@ -80,6 +80,9 @@ class DigitalOcean(Logger):
                 j_rsp = rsp.json()
                 dr_status = j_rsp.get('droplet').get('status')
                 if dr_status == 'active':
+                    ipv4 = j_rsp.get('droplet').get('networks').get('v4')[0].get('ip_address')
+                    if self.droplet:
+                        self.droplet['ipv4'] = ipv4
                     self.logger.debug(f"Droplet {droplet_id} is active")
                     return True
                 msg = (f"Waiting for droplet"
@@ -95,8 +98,6 @@ class DigitalOcean(Logger):
         self.logger.error(f"Droplet {droplet_id} activation check"
             f" exited on timeout")      
         return false
-                
-
 
     def _rd_single_str_file(self, file_path):
         # Reads a file into a single string
