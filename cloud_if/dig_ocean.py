@@ -21,11 +21,11 @@ class DigitalOcean():
         self.common_config = config.get('Common')
         if not self.config:
             raise KeyError('DigitalOcean config is invalid')
-        self.droplets = []
+        self.droplet = None
         self.home = os.path.expanduser('~')
         self.key = self._read_api_key()
         self.ssh_fp = self._read_ssh_fingerprint()
-        self.vm_name = self.common_config.get("vm_name", "rwar-vpn")
+        self.vm_name = self.common_config.get("vm_name", "rwarvpn")
         self.region = self.config.get("region", "nyc1")
         self.size = self.config.get("size", "s-1vcpu-1gb")
         self.image = self.config.get("image", "centos-8-x64")
@@ -55,9 +55,13 @@ class DigitalOcean():
             "private_networking": self.private_networking,
             "volumes": self.volumes,
             "tags": self.tags}
-        print(data)
-        return self._api_post('droplets', data)
-
+        rsp = self._api_post('droplets', data)
+        if rsp.status_code == 202:
+            j_rsp = rsp.json()
+            droplet_id = j_rsp.get('droplet').get('id')
+            droplet_data = {droplet_id: {'api key': self.web_api_key}}
+            self.droplet = droplet_data
+        return rsp
 
     def _rd_single_str_file(self, file_path):
         # Reads a file into a single string
