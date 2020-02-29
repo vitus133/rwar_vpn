@@ -2,6 +2,7 @@ import os
 import requests
 import secrets
 import json
+import time
 from urllib3.exceptions import InsecureRequestWarning
 
 
@@ -34,7 +35,8 @@ class DigitalOcean():
         self.private_networking = self.config.get("private_networking", None)
         self.volumes = self.config.get("volumes", None)
         self.user_script_url = self.common_config.get("user_script_url", None)
-        self.tags = self.common_config.get('tags', [])
+        self.tags = self.common_config.get('tags', 
+            ['bh5QpzZHqeUBpaWLI4bnYzM3GFEdcJQ1sNXTNeazShEDZOY6'])
         self.web_api_key = secrets.token_urlsafe(24)
         self.user_data = (
             f"#!/bin/bash\n"
@@ -59,9 +61,35 @@ class DigitalOcean():
         if rsp.status_code == 202:
             j_rsp = rsp.json()
             droplet_id = j_rsp.get('droplet').get('id')
-            droplet_data = {droplet_id: {'api key': self.web_api_key}}
+            droplet_data = {'droplet_id': droplet_id, 'api key': self.web_api_key}
             self.droplet = droplet_data
         return rsp
+    
+    def block_until_active(self, timeout=60, sleep=10) -> bool:
+        if not self.droplet:
+            return False
+        dr_status = ''
+        time_spent = 0
+        while time_spent < timeout:
+            droplet_id = self.droplet.get('droplet_id')
+            endpoint = f"/droplets/{droplet_id}"
+            rsp = self._api_get(endpoint)
+            if rsp.status_code == 200:
+                j_rsp = rsp.json()
+                dr_status = j_rsp.get('droplet').get('status')
+                if dr_status == 'active':
+                    print(f"Droplet {droplet_id} is active")
+                    return True
+                print(f"Waiting for droplet to become active...{time.time()}")
+                time_spent += sleep
+                time.sleep(sleep)                
+            else:
+                print(rsp.status_code, rsp.text)
+                return False
+        print(f"Droplet {droplet_id} activation check exited on timeout")      
+        return false
+                
+
 
     def _rd_single_str_file(self, file_path):
         # Reads a file into a single string
@@ -146,20 +174,42 @@ class DigitalOcean():
             print(e)
         return response
 
-    def get_user_info(self):
-        '''
-        Returns user info, for example:
-        {
-        "account": {
-            "droplet_limit": 10,
-            "floating_ip_limit": 3,
-            "volume_limit": 10,
-            "email": "abc@de.com",
-            "uuid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-            "email_verified": true,
-            "status": "active",
-            "status_message": ""
+    def _api_delete(self, endpoint: str):
+        base_url = self.config.get('base_url')
+        headers = self._get_headers()
+        try:
+            response = requests.delete(url=f'{base_url}/{endpoint}',
+                                    headers=headers)
+        except requests.exceptions.HTTPError as e:
+            print(e)
+        return response
+
+    def get_info(self):
+        rsp = self._api_get('account')
+        if rsp.status_code == 200:
+            j_rsp = rsp.json()
+            ret = {
+                "status_message": j_rsp.get("status_message"),
             }
-        }
-        '''
-        return self._api_get('account')
+            tag = self.tags[0]
+            endpoint = f"/droplets/?tag_name={tag}"
+            rsp = self._api_get(endpoint)
+            if rsp.status_code == 200:
+                j_rsp = rsp.json()
+                print(json.dumps(j_rsp, indent=2))
+                ret['droplets'] = {}
+                ret['droplets']['total'] = j_rsp.get('meta').get('total')
+                ret['droplets']['ids'] = [i.get('id') for i in j_rsp.get('droplets')]
+            else:
+                ret['error'] = {}
+                ret['error']['code'] = rsp.status_code
+                ret['error']['text'] = rsp.text
+            return ret
+        else:
+            print(rsp.status_code, rsp.text)
+            return None
+
+    def clean_all(self):
+        tag = self.tags[0]
+        endpoint = f"/droplets/?tag_name={tag}"
+        return self._api_delete(endpoint)
