@@ -27,18 +27,17 @@ if __name__ == '__main__':
             assert(rsp.status_code == 202)
             vps.block_until_active()
             user_info = vps.get_info()
-            print(vps.droplet)
-            '''
-            ipv4 = 
+            ipv4 = vps.droplet.get('ipv4')
+            key = vps.droplet.get('api key')
             status_code = ''
             sleep_time = 10
-            delay_time = 120
+            delay_time = 300
             while status_code != 202 and delay_time > 0:
                 print("Waiting for web server to get installed and up")
                 time.sleep(sleep_time)
                 try:
                     delay_time -= sleep_time
-                    rsp = requests.get(url=f"https://{ipv4}:4443/hello/test", verify=False)
+                    rsp = requests.get(url=f"https://{ipv4}:4443/{key}/test", verify=False)
                     status_code = rsp.status_code
                     print(status_code)
                 except Exception as e:
@@ -48,10 +47,6 @@ if __name__ == '__main__':
                 print("Setup failed")
                 exit(1)
             print("Setup succeeded")
-            '''
-
-
-
 
     print(f"Delete? [y/N]")
     if input() != 'y':
