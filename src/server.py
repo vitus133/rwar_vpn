@@ -1,6 +1,6 @@
 from bottle import Bottle, route, run, template
 from bottle import HTTPResponse
-from bottle import send_file
+from bottle import static_file
 from multiprocessing import Process
 import time
 import os
@@ -37,5 +37,5 @@ def client(api_key):
 
 @application.route(f'/<api_key>/client')
 def client(api_key):
-    client = os.path.join(home, 'client.ovpn')
-    return send_file(client)
+    filename = 'client.ovpn'
+    return static_file(filename, root=home, download=filename)
