@@ -123,6 +123,7 @@ openssl req -batch -x509 -newkey rsa:4096 -nodes -out src/cert.pem -keyout src/k
 python3 -m venv environment
 source environment/bin/activate
 pip install --upgrade pip
+pip install -e .
 cp service/rw_vpn.service /usr/lib/systemd/system/
 pip install -r deploy_reqs.txt
 systemctl daemon-reload

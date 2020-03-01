@@ -206,7 +206,7 @@ class DigitalOcean(Logger):
             rsp = self._api_get(endpoint)
             if rsp.status_code == 200:
                 j_rsp = rsp.json()
-                print(json.dumps(j_rsp, indent=2))
+                self.logger.debug(json.dumps(j_rsp, indent=2))
                 ret['droplets'] = {}
                 ret['droplets']['total'] = j_rsp.get('meta').get('total')
                 ret['droplets']['ids'] = \
