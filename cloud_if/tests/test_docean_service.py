@@ -2,6 +2,7 @@
 This module tests DigitalOcean service directly
 '''
 import json
+import time
 from cloud_if.dig_ocean import DigitalOcean
 from cloud_if.config import config
 
